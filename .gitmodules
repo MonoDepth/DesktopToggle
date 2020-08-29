@@ -1,0 +1,3 @@
+[submodule "MonoUtils.Standard"]
+	path = MonoUtils.Standard
+	url = git@github.com:MonoDepth/MonoUtils.Standard.git
