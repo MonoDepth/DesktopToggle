@@ -11,5 +11,9 @@ namespace DesktopToggle
 
         [Section("Behaviour")]
         public bool HideOnMinimize { get; set; } = true;
+
+        public int DoubleClickMilliseconds { get; set; } = 650;
+
+        public int TriggerButton { get; set; } = 0xA2;
     }
 }

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using MonoUtilities.Conversions;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
@@ -22,18 +23,20 @@ namespace DesktopToggle
     /// </summary>
     public partial class MainWindow : Window
     {
-        private Controller controller;
-        private Settings settings;
+        private readonly Controller controller;
+        private readonly Settings settings;
 
 
         public MainWindow()
         {
-            controller = new Controller();
-            controller.SetupKeyboardHooks();
-            settings = new Settings(IniFile.GetOrCreateProgramAppdataFolder("DesktopToggle"));
+            settings = new Settings(IniFile.GetOrCreateProgramAppdataFolder("DesktopToggle") + "/settings.ini");
             settings.LoadConfig();
+            controller = new Controller(ref settings);
+            controller.SetupKeyboardHooks();
             InitializeComponent();
-            MainNotifyIcon.DoubleClickCommand = new TrayClickCommand(ToggleWindow);            
+            TriggerKeyBtn.Content = settings.TriggerButton.ToString();
+            DelayInput.Text = settings.DoubleClickMilliseconds.ToString();
+            MainNotifyIcon.DoubleClickCommand = new TrayClickCommand(ToggleWindow);                        
         }
 
         public bool ToggleWindow()
@@ -48,14 +51,63 @@ namespace DesktopToggle
                     break;
             }            
             return true;
+        }        
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            controller.Dispose();
+        }
+
+        private void Window_StateChanged(object sender, EventArgs e)
+        {
+            if (settings.HideOnMinimize && WindowState == WindowState.Minimized)
+            {
+                ToggleWindow();
+            }
+        }
+
+        private async void Button_Click(object sender, RoutedEventArgs e)
+        {
+            TriggerKeyBtn.Content = "Press any key (Esc to abort)";
+            int keyCode = await controller.ReadKeyAsync();
+            if (keyCode != GlobalKeyboardHook.VkEscape) {
+                TriggerKeyBtn.Content = keyCode.ToString();
+                settings.TriggerButton = keyCode;
+                settings.SaveConfig();
+            }
+        }
+        private void TextBox_PreviewInput(object sender, TextCompositionEventArgs e)
+        {
+            if (int.TryParse(DelayInput.Text + e.Text, out int delay) && delay > 0)
+            {
+                settings.DoubleClickMilliseconds = delay;
+                settings.SaveConfig();
+            }
+            else
+            {
+                e.Handled = true;
+            }
         }
 
         internal class Controller : IDisposable
         {
+            public enum Mode
+            {
+                Assign,
+                Listen
+            }
             private GlobalKeyboardHook _globalKeyboardHook;
             private DateTime lastKeyPress = DateTime.MinValue;
             private int lastKey = 0;
             private DesktopToggler desktopToggler = new DesktopToggler();
+            private readonly Settings settings;
+            public Mode mode = Mode.Listen;
+            
+
+            public Controller(ref Settings settings)
+            {
+                this.settings = settings;
+            }
 
             public void SetupKeyboardHooks()
             {
@@ -64,13 +116,49 @@ namespace DesktopToggle
             }
 
             private void OnKeyPressed(object sender, GlobalKeyboardHookEventArgs e)
+            {   
+                switch(mode)
+                {
+                    case Mode.Listen:
+                        HandleListen(e);
+                        break;
+                    case Mode.Assign:
+                        HandleAssign(e);
+                        break;
+                }
+            }
+
+            public async Task<int> ReadKeyAsync()
+            {                
+                mode = Mode.Assign;
+                lastKey = 0;
+                while (lastKey == 0)
+                {
+                    await Task.Delay(50);
+                }
+                int key = lastKey;
+                lastKey = 0;
+                mode = Mode.Listen;
+                return key;
+            }
+
+            private void HandleAssign(GlobalKeyboardHookEventArgs e)
+            {
+                if (e.KeyboardState != GlobalKeyboardHook.KeyboardState.KeyDown)
+                    return;
+                if (lastKey == 0)
+                    lastKey = e.KeyboardData.VirtualCode;
+            }
+
+            private void HandleListen(GlobalKeyboardHookEventArgs e)
             {
                 //Debug.WriteLine(e.KeyboardData.VirtualCode);
-                if (e.KeyboardState != GlobalKeyboardHook.KeyboardState.KeyUp)
+                
+                if (e.KeyboardState != GlobalKeyboardHook.KeyboardState.KeyDown)
                     return;
 
                 int currentKey = e.KeyboardData.VirtualCode;
-                if (currentKey == GlobalKeyboardHook.VkLControl && lastKey == currentKey && (DateTime.Now - lastKeyPress).TotalMilliseconds <= 650)
+                if (currentKey == settings.TriggerButton && lastKey == currentKey && (DateTime.Now - lastKeyPress).TotalMilliseconds <= settings.DoubleClickMilliseconds)
                 {
                     lastKey = 0;
                     desktopToggler.ToggleDesktopIcons();
@@ -79,7 +167,7 @@ namespace DesktopToggle
                 {
                     lastKeyPress = DateTime.Now;
                     lastKey = e.KeyboardData.VirtualCode;
-                }                
+                }
 
                 // seems, not needed in the life.
                 //if (e.KeyboardState == GlobalKeyboardHook.KeyboardState.SysKeyDown &&
@@ -94,19 +182,6 @@ namespace DesktopToggle
             public void Dispose()
             {
                 _globalKeyboardHook?.Dispose();
-            }
-        }
-
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
-        {
-            controller.Dispose();
-        }
-
-        private void Window_StateChanged(object sender, EventArgs e)
-        {
-            if (settings.HideOnMinimize && WindowState == WindowState.Minimized)
-            {
-                ToggleWindow();
             }
         }
     }

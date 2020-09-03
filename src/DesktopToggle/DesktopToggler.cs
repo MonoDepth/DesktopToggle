@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
+using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Windows.Input;
 
 namespace DesktopToggle
 {
@@ -14,6 +17,27 @@ namespace DesktopToggle
         [DllImport("user32.dll", SetLastError = false)] static extern IntPtr GetDesktopWindow();
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)] static extern IntPtr SendMessage(IntPtr hWnd, UInt32 Msg, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("user32.dll")]
+        static extern bool GetKeyboardState(byte[] lpKeyState);
+
+        [DllImport("user32.dll")]
+        static extern uint MapVirtualKey(uint uCode, uint uMapType);
+
+        [DllImport("user32.dll")]
+        static extern IntPtr GetKeyboardLayout(uint idThread);
+
+        [DllImport("user32.dll")] static extern int ToUnicodeEx(uint wVirtKey, uint wScanCode, byte[] lpKeyState, [Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pwszBuff, int cchBuff, uint wFlags, IntPtr dwhkl);
+
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        public static extern int ToUnicode(
+            uint virtualKeyCode,
+            uint scanCode,
+            byte[] keyboardState,
+            StringBuilder receivingBuffer,
+            int bufferSize,
+            uint flags
+        );
 
         private const int WM_COMMAND = 0x111;
         public bool ToggleDesktopIcons()
@@ -50,5 +74,30 @@ namespace DesktopToggle
             }
             return hShellViewWin;
         }
+
+        public static string KeyCodeToUnicode(uint virtualKeyCode)
+        {
+            byte[] keyboardState = new byte[255];
+            bool keyboardStateStatus = GetKeyboardState(keyboardState);
+
+            if (!keyboardStateStatus)
+            {
+                return "";
+            }
+
+            uint scanCode = MapVirtualKey(virtualKeyCode, 0);
+            IntPtr inputLocaleIdentifier = GetKeyboardLayout(0);
+
+            StringBuilder result = new StringBuilder();
+            ToUnicodeEx(virtualKeyCode, scanCode, keyboardState, result, 5, 0, inputLocaleIdentifier);
+
+            return result.ToString();
+        }
+
+        public static string KeyToUniCode(int keyCode)
+        {
+            KeyConverter kc = new KeyConverter();
+            return kc.ConvertToString(keyCode).ToUpper();
+        }        
     }
 }
