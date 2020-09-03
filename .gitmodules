@@ -1,0 +1,6 @@
+[submodule "src/MonoUtils.Standard"]
+	path = src/MonoUtils.Standard
+	url = git@github.com:MonoDepth/MonoUtils.Standard.git
+[submodule "src/WPF.NotifyIcon.NetCore3"]
+	path = src/WPF.NotifyIcon.NetCore3
+	url = git@github.com:MonoDepth/WPF.NotifyIcon.NetCore3.git
