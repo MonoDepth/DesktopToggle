@@ -31,7 +31,7 @@ namespace DesktopToggle
         {
             settings = new Settings(IniFile.GetOrCreateProgramAppdataFolder("DesktopToggle") + "/settings.ini");
             settings.LoadConfig();
-            controller = new Controller(ref settings);
+            controller = new Controller(ref settings, this);
             controller.SetupKeyboardHooks();
             InitializeComponent();
             TriggerKeyBtn.Content = settings.TriggerButton.ToString();
@@ -98,15 +98,19 @@ namespace DesktopToggle
             }
             private GlobalKeyboardHook _globalKeyboardHook;
             private DateTime lastKeyPress = DateTime.MinValue;
-            private int lastKey = 0;
+            private int lastKeyUp = 0;
+            private int lastKeyDown = 0;
+            private int previousKeyPress = 0;
             private DesktopToggler desktopToggler = new DesktopToggler();
             private readonly Settings settings;
+            private readonly MainWindow mainWindow;
             public Mode mode = Mode.Listen;
             
 
-            public Controller(ref Settings settings)
+            public Controller(ref Settings settings, MainWindow mainWindow)
             {
                 this.settings = settings;
+                this.mainWindow = mainWindow;
             }
 
             public void SetupKeyboardHooks()
@@ -131,42 +135,67 @@ namespace DesktopToggle
             public async Task<int> ReadKeyAsync()
             {                
                 mode = Mode.Assign;
-                lastKey = 0;
-                while (lastKey == 0)
+                lastKeyDown = 0;
+                while (lastKeyDown == 0)
                 {
                     await Task.Delay(50);
                 }
-                int key = lastKey;
-                lastKey = 0;
+                int key = lastKeyDown;
+                lastKeyDown = 0;
                 mode = Mode.Listen;
                 return key;
             }
 
             private void HandleAssign(GlobalKeyboardHookEventArgs e)
             {
-                if (e.KeyboardState != GlobalKeyboardHook.KeyboardState.KeyDown)
+                if (e.KeyboardState != GlobalKeyboardHook.KeyboardState.KeyDown && e.KeyboardState != GlobalKeyboardHook.KeyboardState.SysKeyDown)
                     return;
-                if (lastKey == 0)
-                    lastKey = e.KeyboardData.VirtualCode;
+                if (lastKeyDown == 0)
+                    lastKeyDown = e.KeyboardData.VirtualCode;
             }
 
             private void HandleListen(GlobalKeyboardHookEventArgs e)
             {
                 //Debug.WriteLine(e.KeyboardData.VirtualCode);
                 
-                if (e.KeyboardState != GlobalKeyboardHook.KeyboardState.KeyDown)
-                    return;
+               /* if (e.KeyboardState != GlobalKeyboardHook.KeyboardState.KeyDown)
+                    return;*/
 
                 int currentKey = e.KeyboardData.VirtualCode;
-                if (currentKey == settings.TriggerButton && lastKey == currentKey && (DateTime.Now - lastKeyPress).TotalMilliseconds <= settings.DoubleClickMilliseconds)
+                if (mainWindow.Visibility == Visibility.Visible)
                 {
-                    lastKey = 0;
+                    mainWindow.InputDebugTextBox.Text += e.KeyboardState.ToString() + " " +  e.KeyboardData.VirtualCode.ToString() + Environment.NewLine;
+                }
+                /*if (currentKey == settings.TriggerButton && lastKeyDown == currentKey && lastKeyUp == currentKey)
+                {
+                    MessageBox.Show("All keys match");
+                }*/
+
+                //(currentKey == settings.TriggerButton && previousKeyPress == currentKey && lastKeyUp == currentKey)
+
+
+                if (e.KeyboardState == GlobalKeyboardHook.KeyboardState.KeyUp && (currentKey == settings.TriggerButton && lastKeyUp == settings.TriggerButton && previousKeyPress == lastKeyUp) && (DateTime.Now - lastKeyPress).TotalMilliseconds <= settings.DoubleClickMilliseconds)
+                {
+                    lastKeyDown = 0;
+                    lastKeyUp = 0;
                     desktopToggler.ToggleDesktopIcons();
+                    MessageBox.Show((DateTime.Now - lastKeyPress).TotalMilliseconds.ToString());
                 }
                 else
                 {
-                    lastKeyPress = DateTime.Now;
-                    lastKey = e.KeyboardData.VirtualCode;
+                    switch (e.KeyboardState)
+                    {
+                        case GlobalKeyboardHook.KeyboardState.SysKeyDown:
+                        case GlobalKeyboardHook.KeyboardState.KeyDown:
+                            previousKeyPress = lastKeyDown;
+                            lastKeyDown = currentKey;
+                            break;
+                        case GlobalKeyboardHook.KeyboardState.SysKeyUp:
+                        case GlobalKeyboardHook.KeyboardState.KeyUp:
+                            lastKeyUp = currentKey;
+                            lastKeyPress = DateTime.Now;
+                            break;
+                    }
                 }
 
                 // seems, not needed in the life.

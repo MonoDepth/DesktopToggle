@@ -19,6 +19,8 @@
         <Label Content="Double click speed (milliseconds) " Grid.Column="2" HorizontalAlignment="Left" Margin="33,114,0,0" VerticalAlignment="Top"/>
         <Button x:Name="TriggerKeyBtn" Content="Not assigned" Grid.Column="2" HorizontalAlignment="Left" Margin="107,77,0,0" VerticalAlignment="Top" Click="Button_Click"/>
         <TextBox x:Name="DelayInput" Grid.Column="2" HorizontalAlignment="Left" Margin="226,118,0,0" Text="650" TextWrapping="Wrap" VerticalAlignment="Top" Width="43" InputScope="Digits" PreviewTextInput="TextBox_PreviewInput"/>
+        <TextBox x:Name="InputDebugTextBox" Grid.Column="2" Margin="0,118,38,30" TextWrapping="Wrap" HorizontalAlignment="Right" Width="264"/>
+        <Label Content="Input Debug" Grid.Column="2" Margin="0,82,225,0" HorizontalAlignment="Right" Width="77" Height="26" VerticalAlignment="Top"/>
 
     </Grid>
 </Window>
