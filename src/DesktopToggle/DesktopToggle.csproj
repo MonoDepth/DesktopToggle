@@ -7,6 +7,11 @@
     <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+
   <ItemGroup>
     <None Remove="Icons\tray.ico" />
   </ItemGroup>

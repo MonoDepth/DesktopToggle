@@ -156,22 +156,11 @@ namespace DesktopToggle
 
             private void HandleListen(GlobalKeyboardHookEventArgs e)
             {
-                //Debug.WriteLine(e.KeyboardData.VirtualCode);
-                
-               /* if (e.KeyboardState != GlobalKeyboardHook.KeyboardState.KeyDown)
-                    return;*/
-
                 int currentKey = e.KeyboardData.VirtualCode;
                 if (mainWindow.Visibility == Visibility.Visible)
                 {
                     mainWindow.InputDebugTextBox.Text += e.KeyboardState.ToString() + " " +  e.KeyboardData.VirtualCode.ToString() + Environment.NewLine;
                 }
-                /*if (currentKey == settings.TriggerButton && lastKeyDown == currentKey && lastKeyUp == currentKey)
-                {
-                    MessageBox.Show("All keys match");
-                }*/
-
-                //(currentKey == settings.TriggerButton && previousKeyPress == currentKey && lastKeyUp == currentKey)
 
 
                 if (e.KeyboardState == GlobalKeyboardHook.KeyboardState.KeyUp && (currentKey == settings.TriggerButton && lastKeyUp == settings.TriggerButton && previousKeyPress == lastKeyUp) && (DateTime.Now - lastKeyPress).TotalMilliseconds <= settings.DoubleClickMilliseconds)
@@ -179,7 +168,6 @@ namespace DesktopToggle
                     lastKeyDown = 0;
                     lastKeyUp = 0;
                     desktopToggler.ToggleDesktopIcons();
-                    MessageBox.Show((DateTime.Now - lastKeyPress).TotalMilliseconds.ToString());
                 }
                 else
                 {
@@ -197,15 +185,6 @@ namespace DesktopToggle
                             break;
                     }
                 }
-
-                // seems, not needed in the life.
-                //if (e.KeyboardState == GlobalKeyboardHook.KeyboardState.SysKeyDown &&
-                //    e.KeyboardData.Flags == GlobalKeyboardHook.LlkhfAltdown)
-                //{
-                //    MessageBox.Show("Alt + Print Screen");
-                //    e.Handled = true;
-                //}
-                //else
             }
 
             public void Dispose()
