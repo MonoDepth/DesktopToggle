@@ -15,9 +15,10 @@
             <ColumnDefinition Width="33*"/>
         </Grid.ColumnDefinitions>
         <tb:TaskbarIcon x:Name="MainNotifyIcon" IconSource="/Icons/tray.ico" ToolTipText="DesktopToggle" Grid.ColumnSpan="4" />
-        <Label Content="Coming Soon™️" VerticalAlignment="Center" FontSize="36" Height="60" Grid.Column="2" FontWeight="Normal" HorizontalAlignment="Center" Width="256"/>
-        <Label Content="Settings and more"  Grid.Column="2" Margin="0,156,0,0" VerticalAlignment="Top" Height="26" HorizontalAlignment="Center" Width="106"/>
-        <Label Content="Doubleclick left ctrl to toggle desktop icons"  Grid.Column="2" Margin="0,350,0,0" VerticalAlignment="Top" Height="26" HorizontalAlignment="Center"/>
+        <Label Content="TriggerKey" Grid.Column="2" HorizontalAlignment="Left" Margin="33,74,0,0" VerticalAlignment="Top"/>
+        <Label Content="Double click speed (milliseconds) " Grid.Column="2" HorizontalAlignment="Left" Margin="33,114,0,0" VerticalAlignment="Top"/>
+        <Button x:Name="TriggerKeyBtn" Content="Not assigned" Grid.Column="2" HorizontalAlignment="Left" Margin="107,77,0,0" VerticalAlignment="Top" Click="Button_Click"/>
+        <TextBox x:Name="DelayInput" Grid.Column="2" HorizontalAlignment="Left" Margin="226,118,0,0" Text="650" TextWrapping="Wrap" VerticalAlignment="Top" Width="43" InputScope="Digits" PreviewTextInput="TextBox_PreviewInput"/>
 
     </Grid>
 </Window>

@@ -174,6 +174,7 @@ namespace DesktopToggle
         }
 
         public const int VkLControl = 0xA2;
+        public const int VkEscape = 0x1B;
         //const int VkLwin = 0x5b;
         //const int VkRwin = 0x5c;
         //const int VkTab = 0x09;
