@@ -97,10 +97,10 @@ namespace DesktopToggle
                 Listen
             }
             private GlobalKeyboardHook _globalKeyboardHook;
-            private DateTime lastKeyPress = DateTime.MinValue;
+            private DateTime lastKeyUpReleased = DateTime.MinValue;
             private int lastKeyUp = 0;
             private int lastKeyDown = 0;
-            private int previousKeyPress = 0;
+            private int previousKeyDown = 0;
             private DesktopToggler desktopToggler = new DesktopToggler();
             private readonly Settings settings;
             private readonly MainWindow mainWindow;
@@ -162,8 +162,7 @@ namespace DesktopToggle
                     mainWindow.InputDebugTextBox.Text += e.KeyboardState.ToString() + " " +  e.KeyboardData.VirtualCode.ToString() + Environment.NewLine;
                 }
 
-
-                if (e.KeyboardState == GlobalKeyboardHook.KeyboardState.KeyUp && (currentKey == settings.TriggerButton && lastKeyUp == settings.TriggerButton && previousKeyPress == lastKeyUp) && (DateTime.Now - lastKeyPress).TotalMilliseconds <= settings.DoubleClickMilliseconds)
+                if (e.KeyboardState.IsStateUp() && AreKeysValid(settings.TriggerButton, currentKey, lastKeyUp, previousKeyDown, lastKeyDown) && IsWithinTimeFrame(lastKeyUpReleased, settings.DoubleClickMilliseconds))
                 {
                     lastKeyDown = 0;
                     lastKeyUp = 0;
@@ -175,16 +174,26 @@ namespace DesktopToggle
                     {
                         case GlobalKeyboardHook.KeyboardState.SysKeyDown:
                         case GlobalKeyboardHook.KeyboardState.KeyDown:
-                            previousKeyPress = lastKeyDown;
+                            previousKeyDown = lastKeyDown;
                             lastKeyDown = currentKey;
                             break;
                         case GlobalKeyboardHook.KeyboardState.SysKeyUp:
                         case GlobalKeyboardHook.KeyboardState.KeyUp:
                             lastKeyUp = currentKey;
-                            lastKeyPress = DateTime.Now;
+                            lastKeyUpReleased = DateTime.Now;
                             break;
                     }
                 }
+            }
+            
+            private bool AreKeysValid(int triggerKey, int currentKeyUp, int lastKeyUp, int previousKeyDown, int lastKeyDown)
+            {
+                return currentKeyUp == triggerKey && lastKeyUp == triggerKey && previousKeyDown == triggerKey && lastKeyDown == triggerKey;
+            }
+
+            private bool IsWithinTimeFrame(DateTime lastReleased, int maxDuration)
+            {
+                return (DateTime.Now - lastReleased).TotalMilliseconds <= maxDuration;
             }
 
             public void Dispose()

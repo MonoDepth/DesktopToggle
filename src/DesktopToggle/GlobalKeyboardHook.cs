@@ -5,9 +5,18 @@ using System.Runtime.InteropServices;
 
 namespace DesktopToggle
 {
-    class GlobalKeyboardHookEventArgs : HandledEventArgs
+
+    public static class KeyBoardHookExtensions
     {
-        public GlobalKeyboardHook.KeyboardState KeyboardState { get; private set; }
+        public static bool IsStateUp(this GlobalKeyboardHook.KeyboardState keystate)
+        {
+            return keystate == GlobalKeyboardHook.KeyboardState.KeyUp;
+        }
+    }
+    public class GlobalKeyboardHookEventArgs : HandledEventArgs
+    {
+        public GlobalKeyboardHook.KeyboardState KeyboardState { get; private set; }        
+
         public GlobalKeyboardHook.LowLevelKeyboardInputEvent KeyboardData { get; private set; }
 
         public GlobalKeyboardHookEventArgs(
@@ -20,7 +29,7 @@ namespace DesktopToggle
     }
 
     //Based on https://gist.github.com/Stasonix
-    class GlobalKeyboardHook : IDisposable
+    public class GlobalKeyboardHook : IDisposable
     {
         public event EventHandler<GlobalKeyboardHookEventArgs> KeyboardPressed;
 
